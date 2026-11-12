@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FINDORA — Every lost thing deserves its way back</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 rx=%2711%27 fill=%27%230e1a3a%27/%3E%3Ccircle cx=%2718%27 cy=%2718%27 r=%279%27 fill=%27none%27 stroke=%27%2312c9b5%27 stroke-width=%273.2%27/%3E%3Cpath d=%27M25 25 L32 32%27 stroke=%27%2312c9b5%27 stroke-width=%273.6%27 stroke-linecap=%27round%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0e1a3a; --navy-2:#16244d; --navy-3:#22336a;
+  --teal:#12c9b5; --teal-d:#0a8f81; --teal-bg:#e3f8f5;
+  --violet:#7b61ff; --violet-bg:#efebff;
+  --paper:#f7f5f0; --card:#ffffff; --slate:#5b6b82; --slate-l:#94a3b8; --line:#e5e2da;
+  --lost:#c2410c; --lost-bg:#fff0e6; --found:#0f7a52; --found-bg:#e4f6ee;
+  --warn:#a16207; --warn-bg:#fef6dc; --err:#b42318; --err-bg:#fdecea;
+  --r:16px; --sh:0 1px 2px rgba(14,26,58,.06),0 6px 20px rgba(14,26,58,.06);
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0}
+body{font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--navy);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--teal-d)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 18px}
+
+/* header */
+header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:10}
+.hbar{display:flex;align-items:center;gap:14px;padding:12px 0;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:0;color:#fff;padding:0}
+.logo b{font-size:20px;letter-spacing:2.5px;font-weight:800}
+.logo b span{color:var(--teal)}
+nav{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{background:transparent;color:#c7cfe2;border:0;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap}
+nav button:hover{background:var(--navy-2);color:#fff}
+nav button.active{background:var(--navy-3);color:#fff;box-shadow:inset 0 -2px 0 var(--teal)}
+nav button[hidden]{display:none}
+.pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--navy-3);color:#c7cfe2;white-space:nowrap}
+.pill.on{background:rgba(18,201,181,.18);color:var(--teal)}
+.pill.staff{background:rgba(123,97,255,.25);color:#cfc4ff}
+
+/* banners */
+.banner{border-radius:12px;padding:10px 14px;margin:14px 0 0;font-size:14px;display:none}
+.banner.info{background:var(--violet-bg);color:#3d2d99}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+main{padding:18px 0 40px}
+.view{display:none;animation:fade .25s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* common */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:11px 18px;font-weight:700;cursor:pointer;transition:transform .1s,filter .15s;font-size:15px}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.teal{background:var(--teal);color:var(--navy)}
+.btn.navy{background:var(--navy);color:#fff}
+.btn.violet{background:var(--violet);color:#fff}
+.btn.lost{background:var(--lost);color:#fff}
+.btn.found{background:var(--found);color:#fff}
+.btn.ghost{background:#efede6;color:var(--navy)}
+.btn.line{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff}
+.btn.danger{background:var(--err-bg);color:var(--err)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.meta{color:var(--slate);font-size:13px}
+h2.sec{font-size:20px;margin:30px 0 12px;display:flex;align-items:center;gap:10px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
+.tag.lost{background:var(--lost-bg);color:var(--lost)}
+.tag.found{background:var(--found-bg);color:var(--found)}
+.tag.st{background:#eeece5;color:var(--slate)}
+.tag.ret{background:var(--teal-bg);color:var(--teal-d)}
+.tag.ai{background:var(--violet-bg);color:var(--violet)}
+.tag.sample{background:#eef2f7;color:var(--slate)}
+.tag.pend{background:var(--warn-bg);color:var(--warn)}
+.tag.rej{background:var(--err-bg);color:var(--err)}
+.empty{color:var(--slate);text-align:center;padding:28px 12px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* hero */
+.hero{background:var(--navy);color:#fff;border-radius:22px;padding:38px 32px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(123,97,255,.35),transparent 70%)}
+.hero:before{content:"";position:absolute;right:120px;bottom:-120px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(18,201,181,.22),transparent 70%)}
+.hero > *{position:relative;z-index:1}
+.hero .kicker{color:var(--teal);font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase}
+.hero h1{font-size:40px;line-height:1.12;margin:10px 0 12px;max-width:640px;font-weight:800}
+.hero p{color:#c7cfe2;max-width:600px;margin:0 0 22px;font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.stat b{font-size:26px;display:block;font-weight:800}
+.stat small{color:var(--slate);font-weight:600}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.step .n{width:30px;height:30px;border-radius:9px;background:var(--teal-bg);color:var(--teal-d);display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:8px}
+.step b{display:block;margin-bottom:4px}
+
+/* cards grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;text-align:left;padding:0}
+.item:hover,.item:focus-visible{transform:translateY(-2px);box-shadow:var(--sh);outline:none}
+.thumb{height:140px;background:linear-gradient(135deg,#eef1f6,#e8e4f7);display:flex;align-items:center;justify-content:center;font-size:46px;overflow:hidden;flex-shrink:0}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.item .body{padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.item .title{font-weight:700;font-size:15px}
+
+/* forms */
+.form{max-width:680px;margin:0 auto}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{margin-top:14px}
+.field label{font-weight:700;font-size:13px;display:block;margin-bottom:5px}
+.field .hint{font-size:12px;color:var(--slate);margin-top:4px}
+.field .err{font-size:12px;color:var(--err);margin-top:4px;display:none;font-weight:600}
+.field.bad .err{display:block}
+.field.bad input,.field.bad select,.field.bad textarea{border-color:var(--err);background:#fffafa}
+input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--teal)}
+textarea{min-height:84px;resize:vertical}
+.toggle{display:flex;background:#efede6;border-radius:14px;padding:4px;gap:4px}
+.toggle button{flex:1;border:0;background:transparent;padding:11px;border-radius:11px;font-weight:700;cursor:pointer}
+.toggle button.on[data-type=lost]{background:var(--lost);color:#fff}
+.toggle button.on[data-type=found]{background:var(--found);color:#fff}
+.private{background:var(--violet-bg);border-radius:14px;padding:4px 14px 14px;margin-top:18px}
+.private h4{margin:12px 0 0;font-size:14px;color:#3d2d99}
+.preview{margin-top:8px;max-height:170px;border-radius:12px;display:none}
+.filters{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:10px;margin-bottom:16px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(14,26,58,.55);display:none;align-items:flex-start;justify-content:center;padding:28px 12px;overflow:auto;z-index:30}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:20px;max-width:760px;width:100%;padding:22px;position:relative;animation:fade .2s ease}
+.x{position:absolute;right:14px;top:12px;border:0;background:#efede6;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:16px}
+.detail{display:grid;grid-template-columns:230px 1fr;gap:18px}
+.detail .thumb{height:210px;border-radius:14px}
+.note{background:var(--violet-bg);color:#3d2d99;border-radius:12px;padding:10px 12px;font-size:13px;margin:10px 0}
+.match{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.match .top{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center}
+.match .thumb{height:72px;width:72px;font-size:30px;border-radius:10px}
+.strength{text-align:right;min-width:86px}
+.strength b{font-size:20px;display:block}
+.strength.s3 b{color:var(--teal-d)} .strength.s2 b{color:var(--violet)} .strength.s1 b{color:var(--slate)}
+.bar{height:6px;background:#eceae3;border-radius:9px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--violet))}
+.sd{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;font-size:13px}
+.sd ul{margin:4px 0 0;padding-left:18px}
+.sd .s{color:var(--found)} .sd .d{color:var(--lost)}
+
+/* tables / desk */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-weight:700;cursor:pointer;font-size:13px}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.claim{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.box{background:#faf9f6;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px}
+.box h5{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--slate)}
+.box.priv{background:var(--violet-bg);border-color:#ddd5ff}
+.list-row{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+.list-row:last-child{border-bottom:0}
+.list-row .thumb{height:52px;width:52px;font-size:24px;border-radius:10px}
+
+.login{display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:stretch;padding-top:6px;min-height:520px}
+.login .hero{display:flex;flex-direction:column;justify-content:center}
+.login .card{display:flex;flex-direction:column;justify-content:center}
+.login h2{margin:0 0 4px;font-size:24px}
+.rolebox{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.rolebox button{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:14px;text-align:left;cursor:pointer}
+.rolebox button b{display:block}
+.rolebox button.on{border-color:var(--teal);background:var(--teal-bg)}
+.userchip{display:flex;align-items:center;gap:8px;color:#c7cfe2;font-size:13px;font-weight:600}
+.userchip button{background:var(--navy-3);color:#fff;border:0;border-radius:9px;padding:6px 10px;cursor:pointer;font-weight:700;font-size:12px}
+body.locked nav, body.locked .userchip, body.locked footer{display:none}
+@media (max-width:760px){.login{grid-template-columns:1fr;min-height:auto}.login .hero{padding:24px 20px}.rolebox{grid-template-columns:1fr}}
+/* ---- visual upgrade ---- */
+html{background:var(--paper)}
+body{min-height:100vh;background-attachment:fixed;background:
+  radial-gradient(1200px 500px at 85% -10%, rgba(123,97,255,.10), transparent 60%),
+  radial-gradient(900px 400px at -10% 10%, rgba(18,201,181,.10), transparent 60%),
+  var(--paper)}
+header{background:rgba(14,26,58,.92);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid rgba(255,255,255,.06)}
+.hero{background:linear-gradient(135deg,#0e1a3a 0%,#16244d 55%,#231d5c 100%);box-shadow:0 20px 50px -20px rgba(14,26,58,.55)}
+.hero-home{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:center;min-height:380px}
+.kicker{display:flex;align-items:center;gap:8px}
+.kdot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(18,201,181,.2);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(18,201,181,.05)}}
+.grad{background:linear-gradient(90deg,var(--teal),#8f7bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{box-shadow:0 4px 14px -6px rgba(14,26,58,.35)}
+.btn.big{padding:13px 20px;font-size:16px}
+.btn.lost{background:linear-gradient(135deg,#e2571c,#c2410c)}
+.btn.found{background:linear-gradient(135deg,#16a06b,#0f7a52)}
+.btn.teal{background:linear-gradient(135deg,#2fe0cb,#12c9b5)}
+.btn.violet{background:linear-gradient(135deg,#927bff,#6a4ff5)}
+.btn.line{box-shadow:none}
+.btn.line:hover{background:rgba(255,255,255,.08)}
+/* hero scene */
+.scene{position:relative;height:300px}
+.scene .ring{position:absolute;left:50%;top:50%;width:210px;height:210px;transform:translate(-50%,-50%);border-radius:50%;border:2px dashed rgba(18,201,181,.35);animation:spinr 40s linear infinite}
+@keyframes spinr{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.fcard{position:absolute;display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.96);color:var(--navy);border-radius:16px;padding:12px 14px;box-shadow:0 18px 40px -12px rgba(0,0,0,.45);min-width:190px;animation:float 6s ease-in-out infinite}
+.fcard .em{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#eef1f6,#e8e4f7);display:flex;align-items:center;justify-content:center;font-size:22px}
+.fcard b{display:block;font-size:14px}
+.fcard small{color:var(--slate);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot.lost{background:var(--lost)} .dot.found{background:var(--found)}
+.f1{left:2%;top:10%}
+.f2{right:2%;bottom:10%;animation-delay:-3s}
+.mpill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,var(--teal),var(--violet));color:#fff;font-weight:700;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 10px 30px -8px rgba(123,97,255,.7);white-space:nowrap}
+.spark{display:inline-block;animation:spinr2 3s linear infinite}
+@keyframes spinr2{to{transform:rotate(360deg)}}
+.chip{position:absolute;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;animation:float 7s ease-in-out infinite}
+.c1{left:60%;top:2%;animation-delay:-1s}.c2{left:8%;bottom:6%;animation-delay:-2.5s}.c3{right:6%;top:30%;animation-delay:-4s}.c4{left:30%;bottom:-2%;animation-delay:-5s}
+@keyframes float{50%{transform:translateY(-10px)}}
+.hero-login .scene{height:250px;margin:6px 0 4px}
+.trust{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.trust span{font-size:12px;font-weight:600;color:#c7cfe2;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);padding:6px 10px;border-radius:999px}
+/* stats + steps */
+.stat{display:flex;gap:12px;align-items:center;box-shadow:var(--sh);transition:transform .15s}
+.stat:hover{transform:translateY(-2px)}
+.si{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.stat b{background:linear-gradient(90deg,var(--navy),#3b4b8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.step{box-shadow:var(--sh);transition:transform .15s}
+.step:hover{transform:translateY(-3px)}
+.step .n{width:42px;height:42px;border-radius:13px;font-size:20px;background:linear-gradient(135deg,var(--teal-bg),var(--violet-bg))}
+h2.sec:before{content:"";width:6px;height:22px;border-radius:4px;background:linear-gradient(var(--teal),var(--violet))}
+/* item cards */
+.item{box-shadow:0 1px 2px rgba(14,26,58,.05)}
+.item:hover,.item:focus-visible{transform:translateY(-4px);box-shadow:0 16px 34px -14px rgba(14,26,58,.35);border-color:#d5d0f5}
+.item .thumb img{transition:transform .35s ease}
+.item:hover .thumb img{transform:scale(1.06)}
+.thumb{position:relative}
+.match{transition:box-shadow .15s,border-color .15s}
+.match:hover{border-color:#d5d0f5;box-shadow:var(--sh)}
+.modal{box-shadow:0 30px 80px -20px rgba(14,26,58,.6)}
+.login .card{box-shadow:0 20px 50px -24px rgba(14,26,58,.35)}
+/* bell */
+.bell{position:relative;background:var(--navy-3);border:0;border-radius:10px;width:36px;height:34px;cursor:pointer;font-size:16px}
+.bell span{position:absolute;top:-5px;right:-5px;background:var(--lost);color:#fff;font-size:10px;font-weight:800;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--navy)}
+.notif{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:start;padding:12px 14px;border-bottom:1px solid var(--line)}
+.notif:last-child{border-bottom:0}
+.notif .ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--teal-bg);font-size:17px}
+.notif.unread{background:linear-gradient(90deg,#f1fffc,#fbfaff);border-left:3px solid var(--teal)}
+.notif{transition:background .18s ease}
+.notif .meta{margin-top:5px;line-height:1.45}
+#bell{position:relative;border:0;background:rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:8px 11px;cursor:pointer}
+#bellCount{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#ef4444;color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--navy)}
+.wa-btn{background:#25d366;color:#fff;text-decoration:none}
+@media (max-width:760px){
+  .hero-home{grid-template-columns:1fr;min-height:0}
+  .hero-home .scene{height:230px}
+  .fcard{min-width:0;padding:10px 12px}.f1{left:0}.f2{right:0}
+  .c1,.c3{display:none}
+  .notif{grid-template-columns:36px 1fr}
+  .notif > div:last-child{grid-column:2}
+  .userchip{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+footer{border-top:1px solid var(--line);padding:22px 0 30px;color:var(--slate);font-size:13px}
+footer b{color:var(--navy)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;display:none;z-index:40;max-width:92%;box-shadow:var(--sh);font-weight:600}
+.toast.err{background:var(--err)}
+
+@media (max-width:760px){
+  .hero{padding:28px 20px}.hero h1{font-size:30px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .steps,.two,.detail,.claim,.sd{grid-template-columns:1fr}
+  .filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}
+  nav{margin-left:0;width:100%}
+  .hbar{gap:8px}
+  .match .top{grid-template-columns:56px 1fr}
+  .match .thumb{height:56px;width:56px}
+  .strength{grid-column:1/-1;text-align:left;display:flex;align-items:center;gap:10px}
+  .strength .bar{flex:1}
+}
+
+/* FINDORA visual refresh — richer depth, clearer hierarchy and polished motion */
+:root{--sh:0 10px 30px rgba(14,26,58,.08),0 2px 7px rgba(14,26,58,.04)}
+body{background:radial-gradient(ellipse at 8% 0%,rgba(18,201,181,.07),transparent 28%),radial-gradient(ellipse at 95% 12%,rgba(123,97,255,.07),transparent 26%),var(--paper)}
+header{background:rgba(10,20,48,.96);backdrop-filter:blur(16px);box-shadow:0 8px 28px rgba(7,16,42,.16);border-bottom:1px solid rgba(255,255,255,.08)}
+.logo svg{filter:drop-shadow(0 5px 12px rgba(18,201,181,.18))}
+.logo b{letter-spacing:3px}
+nav button{transition:background .18s,color .18s,transform .18s}
+nav button:hover{transform:translateY(-1px)}
+.hero{background:linear-gradient(118deg,#0b1738 0%,#162653 55%,#24265c 100%);box-shadow:0 18px 45px rgba(14,26,58,.16);border:1px solid rgba(255,255,255,.08)}
+.hero:after{width:420px;height:420px;right:-90px;top:-150px;background:radial-gradient(circle,rgba(123,97,255,.42),transparent 68%)}
+.hero:before{width:360px;height:360px;right:26%;bottom:-220px;background:radial-gradient(circle,rgba(18,201,181,.22),transparent 68%)}
+.hero h1{letter-spacing:-1.5px}
+.grad{background:linear-gradient(90deg,#4ce3d2,#b6a7ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.card,.stat,.step{box-shadow:var(--sh);border-color:rgba(21,38,77,.09);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.stat:hover,.step:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(14,26,58,.1);border-color:rgba(18,201,181,.32)}
+.stat .si{box-shadow:inset 0 0 0 1px rgba(14,26,58,.04)}
+.item{border-color:rgba(21,38,77,.1);box-shadow:0 5px 16px rgba(14,26,58,.045);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.item:hover,.item:focus-visible{transform:translateY(-5px);box-shadow:0 18px 34px rgba(14,26,58,.13);border-color:rgba(18,201,181,.5)}
+.thumb{background:linear-gradient(135deg,#e7f7f4,#efedff 55%,#f8f1e9)}
+.btn{box-shadow:0 4px 12px rgba(14,26,58,.08);transition:transform .16s ease,filter .16s ease,box-shadow .16s ease}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(14,26,58,.13)}
+input,select,textarea{box-shadow:0 1px 2px rgba(14,26,58,.025)}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(18,201,181,.12)}
+.match{background:linear-gradient(135deg,#fff,#fbfcff);border-color:rgba(123,97,255,.16);box-shadow:0 4px 14px rgba(14,26,58,.035)}
+.match:hover{border-color:rgba(18,201,181,.45)}
+.bell{transition:transform .2s ease}
+.bell:hover{transform:translateY(-2px) rotate(-8deg)}
+.modal{box-shadow:0 28px 80px rgba(7,16,42,.28);border:1px solid rgba(255,255,255,.65)}
+.banner{box-shadow:0 6px 18px rgba(14,26,58,.06)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hbar">
+    <button class="logo" onclick="go('home')" aria-label="FINDORA home">
+      <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="11" fill="#16244d"/>
+        <circle cx="18" cy="18" r="9" fill="none" stroke="#12c9b5" stroke-width="3.2"/>
+        <path d="M25 25 L32 32" stroke="#12c9b5" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M14.5 18.5 l2.6 2.6 l5-5.2" fill="none" stroke="#7b61ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <b>FIND<span>ORA</span></b>
+    </button>
+    <span id="aiPill" class="pill">AI: starting…</span>
+    <span id="rolePill" class="pill" hidden></span>
+    <button class="bell" id="bell" hidden aria-label="Notifications">🔔<span id="bellCount" hidden></span></button>
+    <span class="userchip" id="userChip" hidden><span id="userName"></span><button onclick="logout()">Log out</button></span>
+    <nav id="nav">
+      <button data-v="home" class="active">Home</button>
+      <button data-v="browse">Browse</button>
+      <button data-v="report">Report item</button>
+      <button data-v="mine">My activity</button>
+      <button data-v="desk" hidden>Security Desk</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="banner" class="banner"></div>
+  <main>
+
+  <!-- LOGIN -->
+  <section id="v-login" class="view">
+    <div class="login">
+      <div class="hero hero-login">
+        <div class="kicker"><span class="kdot"></span>MITE Moodbidri · Campus Lost &amp; Found</div>
+        <h1>Every lost thing deserves its <span class="grad">way back.</span></h1>
+        <p>Report lost or found items, get smart match suggestions, and receive updates in your FINDORA inbox.</p>
+        <div class="scene" aria-hidden="true">
+          <div class="ring"></div>
+          <div class="fcard f1"><span class="em">🎧</span><div><b>Black earbuds</b><small><i class="dot lost"></i>Lost · Library</small></div></div>
+          <div class="fcard f2"><span class="em">🎧</span><div><b>Earphones in case</b><small><i class="dot found"></i>Found · Library</small></div></div>
+          <div class="mpill"><span class="spark">✦</span> AI match · <b>Strong</b></div>
+          <div class="chip c1">🪪</div><div class="chip c2">🧴</div><div class="chip c3">🔑</div><div class="chip c4">🧮</div>
+        </div>
+        <div class="trust"><span>🔒 Phone &amp; USN stay private</span><span>🔔 In-app inbox alerts</span><span>🛡️ Desk-verified handover</span></div>
+      </div>
+      <div class="card" id="loginBody"></div>
+    </div>
+  </section>
+
+  <!-- HOME -->
+  <section id="v-home" class="view active">
+    <div class="hero hero-home">
+      <div class="hero-text">
+        <div class="kicker"><span class="kdot"></span>MITE Moodbidri · Campus Lost &amp; Found</div>
+        <h1>Every lost thing deserves its <span class="grad">way back.</span></h1>
+        <p>Post a lost or found item with a photo. FINDORA compares item details, colour, place and time, suggests likely matches, and saves important updates in your inbox. WhatsApp is optional.</p>
+        <div class="row">
+          <button class="btn lost big" onclick="openReport('lost')">😟 I lost something</button>
+          <button class="btn found big" onclick="openReport('found')">🙌 I found something</button>
+          <button class="btn line" onclick="go('browse')">Browse reports →</button>
+        </div>
+      </div>
+      <div class="scene" aria-hidden="true">
+          <div class="ring"></div>
+          <div class="fcard f1"><span class="em">🎧</span><div><b>Black earbuds</b><small><i class="dot lost"></i>Lost · Library</small></div></div>
+          <div class="fcard f2"><span class="em">🎧</span><div><b>Earphones in case</b><small><i class="dot found"></i>Found · Library</small></div></div>
+          <div class="mpill"><span class="spark">✦</span> AI match · <b>Strong</b></div>
+          <div class="chip c1">🪪</div><div class="chip c2">🧴</div><div class="chip c3">🔑</div><div class="chip c4">🧮</div>
+        </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="si" style="background:var(--lost-bg)">📍</span><div><b id="sLost">–</b><small>Lost reports open</small></div></div>
+      <div class="stat"><span class="si" style="background:var(--found-bg)">📦</span><div><b id="sFound">–</b><small>Found items waiting</small></div></div>
+      <div class="stat"><span class="si" style="background:var(--violet-bg)">✨</span><div><b id="sMatch">–</b><small>Strong AI matches</small></div></div>
+      <div class="stat"><span class="si" style="background:var(--teal-bg)">🎉</span><div><b id="sRet">–</b><small>Returned to owners</small></div></div>
+    </div>
+
+    <h2 class="sec">How it works</h2>
+    <div class="steps">
+      <div class="step"><div class="n">📸</div><b>1 · Report in 30 seconds</b><span class="meta">Add a photo, place and time. AI can fill in the details from your photo.</span></div>
+      <div class="step"><div class="n">✨</div><b>2 · AI finds matches</b><span class="meta">AI compares lost and found reports, explains what's similar and different, and alerts the owner on WhatsApp.</span></div>
+      <div class="step"><div class="n">🛡️</div><b>3 · Safe handover</b><span class="meta">Claim with private proof. The Security Desk verifies it, then shares contacts on WhatsApp and records the return.</span></div>
+    </div>
+
+    <h2 class="sec">Strongest AI suggestions</h2>
+    <div id="homeMatches"></div>
+    <h2 class="sec">Recent reports</h2>
+    <div class="grid" id="homeRecent"></div>
+  </section>
+
+  <!-- BROWSE -->
+  <section id="v-browse" class="view">
+    <div class="filters">
+      <input id="q" placeholder="Search name or description, e.g. blue bottle" aria-label="Search">
+      <select id="fType" aria-label="Type"><option value="">Lost + found</option><option value="lost">Lost</option><option value="found">Found</option></select>
+      <select id="fCat" aria-label="Category"></select>
+      <select id="fLoc" aria-label="Location"></select>
+      <select id="fStatus" aria-label="Status"><option value="active">Active</option><option value="">All statuses</option><option value="Open">Open (lost)</option><option value="With finder">With finder</option><option value="At Security Desk">At Security Desk</option><option value="Claim approved">Claim approved</option><option value="Returned">Returned</option></select>
+    </div>
+    <div class="grid" id="browseList"></div>
+  </section>
+
+  <!-- REPORT -->
+  <section id="v-report" class="view">
+    <form id="rForm" class="card form" novalidate>
+      <div class="toggle" role="tablist">
+        <button type="button" data-type="lost" class="on">I lost an item</button>
+        <button type="button" data-type="found">I found an item</button>
+      </div>
+      
+
+      <div class="field" data-f="photo">
+        <label for="rPhoto">Photo <span id="photoReq" class="meta">(optional)</span></label>
+        <input type="file" id="rPhoto" accept="image/*">
+        <img id="rPreview" class="preview" alt="Selected photo preview">
+        <div class="row" style="margin-top:8px">
+          <button type="button" id="aiFill" class="btn violet sm" hidden>✨ Fill details from photo with AI</button>
+          <span id="aiFillMsg" class="meta"></span>
+        </div>
+        <div class="err" id="photoErr">Please add a photo of the found item. It helps the owner recognise it.</div>
+      </div>
+
+      <div class="field" data-f="title">
+        <label for="rTitle">Item name *</label>
+        <input id="rTitle" maxlength="80" placeholder="e.g. Black boAt earbuds in case">
+        <div class="err">Enter the item name (at least 3 letters).</div>
+      </div>
+      <div class="two">
+        <div class="field" data-f="cat"><label for="rCat">Category *</label><select id="rCat"></select><div class="err">Choose a category.</div></div>
+        <div class="field" data-f="color"><label for="rColor">Main colour *</label><select id="rColor"></select><div class="err">Choose a colour.</div></div>
+      </div>
+      <div class="field" data-f="desc">
+        <label for="rDesc">Public description *</label>
+        <textarea id="rDesc" maxlength="400" placeholder="Brand, size, case, stickers… Everyone can see this."></textarea>
+        <div class="hint">Keep one secret detail out of here. Put it in the private box below so only the real owner knows it.</div>
+        <div class="err">Describe the item (at least 10 letters).</div>
+      </div>
+      <div class="two">
+        <div class="field" data-f="loc"><label for="rLoc" id="locLabel">Where did you last have it? *</label><select id="rLoc"></select><div class="err">Choose a place.</div></div>
+        <div class="field" data-f="date"><label for="rDate" id="dateLabel">When did you lose it? *</label><input type="date" id="rDate"><div class="err">Choose a date that is not in the future.</div></div>
+      </div>
+      <div class="field" data-f="held" id="heldWrap" hidden>
+        <label for="rHeld">Where is the item now? *</label>
+        <select id="rHeld"><option value="With finder">I still have it</option><option value="At Security Desk">I handed it to the Security Desk</option></select>
+      </div>
+
+      <div class="private">
+        <h4>🔒 Private — only the Security Desk can see this</h4>
+        <div class="field" data-f="hidden">
+          <label for="rHidden" id="hiddenLabel">Secret identifying detail *</label>
+          <textarea id="rHidden" maxlength="300" placeholder=""></textarea>
+          <div class="err">Add one detail only the real owner would know (at least 5 letters).</div>
+        </div>
+        <div class="meta">Your name and phone come from your account and are only shown to the Security Desk.</div>
+      </div>
+
+      <div class="row" style="margin-top:18px">
+        <button class="btn teal" type="submit" id="rSubmit">Post report &amp; find matches</button>
+        <span id="rMsg" class="meta"></span>
+      </div>
+    </form>
+  </section>
+
+  <!-- MY ACTIVITY -->
+  <section id="v-mine" class="view">
+    <div id="mineBody"></div>
+  </section>
+
+  <!-- SECURITY DESK -->
+  <section id="v-desk" class="view">
+    <div class="card" style="margin-bottom:14px">
+      <b>Security Desk</b>
+      <div class="meta">Staff only. The server checks the staff role on every request, so students can't read private details or change other people's reports even if they open this page.</div>
+    </div>
+    <div class="tabs" id="deskTabs">
+      <button data-t="claims" class="on">Claims to review</button>
+      <button data-t="found">Found items</button>
+      <button data-t="all">All reports</button>
+      <button data-t="wa">WhatsApp</button>
+      <button data-t="staff">Staff logins</button>
+    </div>
+    <div id="deskBody"></div>
+  </section>
+  </main>
+
+  <footer>
+    <b>FINDORA</b> · Every lost thing deserves its way back.<br>
+    Built for AI VIBEX 1.0 at MITE, Moodbidri by team <b>CTRL ALT DEFEAT</b> — Adithya T S, Layshun Fernandes, Vignesh.<br>
+    AI suggestions are hints, not proof of ownership. Every handover is verified by the Security Desk.
+  </footer>
+</div>
+
+<div class="modal-bg" id="mBg"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/match.js?v=1.1.0"></script>
+<script src="/app.js?v=1.1.0"></script>
+</body>
+</html>
