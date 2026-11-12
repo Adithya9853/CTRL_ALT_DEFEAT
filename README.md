@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FINDORA — Every lost thing deserves its way back
 
 **AI VIBEX 1.0 · MITE, Moodbidri · Team CTRL ALT DEFEAT**
@@ -234,3 +235,6 @@ Before you start: run `npm run seed`, then `npm start`. Have one laptop open as 
 - Open **My activity → Inbox & notifications** to see alerts. New messages remain unread until you choose **Mark all as read**.
 - WhatsApp is optional. If it is not configured or a provider rejects a message, the FINDORA inbox copy remains available.
 - When testing on two laptops, both people must open the same server's LAN URL (not each laptop's own `localhost`) and remain on the same Wi-Fi network.
+=======
+# CTRL_ALT_DEFEAT
+>>>>>>> 5fcfc68a31eaa38e2d608fcc5fe2a0b216bbb452
